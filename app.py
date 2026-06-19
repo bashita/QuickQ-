@@ -11,12 +11,44 @@ app.secret_key = 'quickq'
 
 # --- MySQL connection ---
 db= pymysql.connect(
-       host="localhost",
-       user="root",
-       password="mysql",
-       database="QuickQ"
-)
+       host="quickq-mysql-bashita2503-e67d.i.aivencloud.com",
+       user="avnadmin",
+       password="AVNS_GIeVVgsoQlwtKpWU8YN",
+       database="defaultdb",
+       port=27410,
+       ssl={"ca": "ca.pem"})
+
 cursor = db.cursor(pymysql.cursors.DictCursor)
+
+@app.route('/init-db')
+def create_tables():
+    """Create the necessary tables in the database if they don't exist."""
+    try:
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS Queues (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            queue_name VARCHAR(100) NOT NULL,
+            queue_code VARCHAR(100) NOT NULL UNIQUE,
+            admin_token VARCHAR(50) NOT NULL UNIQUE,
+            current_token INT DEFAULT NULL,
+            is_active BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+            """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS Queue_Members (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                queue_id INT NOT NULL,
+                token_number INT NOT NULL,
+                nickname VARCHAR(255) NOT NULL,
+                joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (queue_id) REFERENCES Queues(id)
+        )
+          """)
+        db.commit()
+        return "Tables created successfully!"
+    except Exception as e:
+        return f"Error creating tables: {str(e)}"
 
 def generate_queue_code():
     """Generate a random 6-character alphanumeric code for the queue."""
@@ -61,7 +93,7 @@ def manage_queue(admin_token):
 
     # Find queue
     cursor.execute("""
-        SELECT * FROM queues
+        SELECT * FROM Queues
         WHERE admin_token = %s
     """, (admin_token,))
 
@@ -74,7 +106,7 @@ def manage_queue(admin_token):
 
     # Get all queue members
     cursor.execute("""
-        SELECT * FROM queue_members
+        SELECT * FROM Queue_Members
         WHERE queue_id = %s
         ORDER BY token_number
     """, (queue_id,))
@@ -95,7 +127,7 @@ def manage_queue(admin_token):
     current_token = queue.get('current_token')
     current_member = None
     if current_token:
-        cursor.execute("""SELECT * FROM queue_members WHERE queue_id = %s AND token_number = %s """, (queue_id, current_token))
+        cursor.execute("""SELECT * FROM Queue_Members WHERE queue_id = %s AND token_number = %s """, (queue_id, current_token))
         current_member = cursor.fetchone()
 
     cursor.close()
@@ -109,7 +141,7 @@ def next_token(admin_token):
 
     # Find queue
     cursor.execute("""
-        SELECT * FROM queues
+        SELECT * FROM Queues
         WHERE admin_token = %s
     """, (admin_token,))
 
@@ -124,22 +156,20 @@ def next_token(admin_token):
     # Find next member
     cursor.execute("""
         SELECT *
-        FROM queue_members
+        FROM Queue_Members
         WHERE queue_id = %s
         AND token_number > %s
         ORDER BY token_number
         LIMIT 1
     """, (
-        queue['id'],
-        current_token
-    ))
+        queue['id'],current_token))
 
     next_member = cursor.fetchone()
 
     if next_member:
 
         cursor.execute("""
-            UPDATE queues
+            UPDATE Queues
             SET current_token = %s
             WHERE id = %s
         """, (
@@ -151,7 +181,7 @@ def next_token(admin_token):
 
         # Queue finished
         cursor.execute("""
-            UPDATE queues
+            UPDATE Queues
             SET current_token = NULL
             WHERE id = %s
         """, (
@@ -177,7 +207,7 @@ def join_queue():
 
         # Find queue using queue code
         cursor.execute("""
-            SELECT * FROM queues
+            SELECT * FROM Queues
             WHERE queue_code = %s
             AND is_active = TRUE
         """, (queue_code,))
@@ -206,7 +236,7 @@ def join_queue():
             # Total members
             cursor.execute("""
                 SELECT COUNT(*) AS total_members
-                FROM queue_members
+                FROM Queue_Members
                 WHERE queue_id = %s
             """, (queue_id,))
 
@@ -214,7 +244,7 @@ def join_queue():
 
             # Current serving member
             cursor.execute("""
-                SELECT * FROM queue_members
+                SELECT * FROM Queue_Members
                 WHERE queue_id = %s
                 AND token_number = %s
             """, (
@@ -227,7 +257,7 @@ def join_queue():
             # Waiting count
             cursor.execute("""
                 SELECT COUNT(*) AS waiting_count
-                FROM queue_members
+                FROM Queue_Members
                 WHERE queue_id = %s
                 AND token_number > %s
             """, (
@@ -283,7 +313,7 @@ def join_queue():
 
             # Check nickname uniqueness
             cursor.execute("""
-                SELECT * FROM queue_members
+                SELECT * FROM Queue_Members
                 WHERE queue_id = %s
                 AND LOWER(nickname) = LOWER(%s)
             """, (
@@ -306,7 +336,7 @@ def join_queue():
             # Find highest token
             cursor.execute("""
                 SELECT MAX(token_number) AS max_token
-                FROM queue_members
+                FROM Queue_Members
                 WHERE queue_id = %s
             """, (queue_id,))
 
@@ -320,7 +350,7 @@ def join_queue():
 
             # Insert member
             cursor.execute("""
-                INSERT INTO queue_members
+                INSERT INTO Queue_Members
                 (queue_id, token_number, nickname)
                 VALUES (%s, %s, %s)
             """, (
@@ -336,7 +366,7 @@ def join_queue():
 
             # Fetch current serving member
             cursor.execute("""
-                SELECT * FROM queue_members
+                SELECT * FROM Queue_Members
                 WHERE queue_id = %s
                 AND token_number = %s
             """, (
@@ -368,4 +398,5 @@ def join_queue():
         queue_code=queue_code
     )
 if __name__ == '__main__':
+       create_tables()  # Ensure tables are created before running the app
        app.run(debug=True)
