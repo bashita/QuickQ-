@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Queue Created - QuickQ{% endblock %}
+
+{% block content %}
+<section class="pannel">
+    <h1>Queue created successfully!</h1>
+    <div class="pannel-grid">
+        <div>
+            <p><strong>Queue name:</strong> {{ queue_name }}</p>
+            <p><strong>Queue code:</strong> {{ queue_code }}</p>
+            <p><strong>Admin token:</strong> {{ admin_token }}</p>
+        </div>
+        <div class="qr-card">
+            <h3>Share the queue</h3>
+            <p>Use this code or the admin link to manage the queue.</p>
+            <p><a href="{{ url_for('manage_queue', admin_token=admin_token) }}">Open queue dashboard</a></p>
+        </div>
+    </div>
+</section>
+{% endblock %}

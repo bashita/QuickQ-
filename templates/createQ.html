@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Queue - QuickQ{% endblock %}
+
+{% block content %}
+<section class="form-card">
+    <h1>Create a new queue</h1>
+    <p style="color: #ffffff;">Give your queue a name and share the join code instantly with participants.</p>
+    <form action="{{ url_for('createQ') }}" method="post">
+        <label for="queue_name">Queue Name</label>
+        <input type="text" id="queue_name" name="queue_name" required placeholder="e.g. Event Line" />
+        <div class="form-actions">
+            <button type="submit">Create Queue</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

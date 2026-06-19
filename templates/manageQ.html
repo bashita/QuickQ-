@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Queue - QuickQ{% endblock %}
+
+{% block content %}
+<section class="pannel">
+    <div class="pannel-grid">
+        <div>
+            <h1>{{ queue.queue_name }}</h1>
+            <p><strong>Queue Code:</strong> {{ queue.queue_code }}</p>
+            <p><strong>Current Token:</strong> {{ queue.current_token or 'None' }}</p>
+            <div class="form-actions">
+                <a class="button" style="color:black" href="{{ url_for('next_token', admin_token=queue.admin_token) }}">Next Token</a>
+            </div>
+        </div>
+        <div class="qr-card">
+            <h3>Share this QR code</h3>
+            <img style="height: 200px; width: 200px;" src="data:image/png;base64,{{ qr_code_data }}" alt="Queue QR Code" />
+            <p>Scan or share the join link below.</p>
+            <p><a href="{{ join_url }}" target="_blank">{{ join_url }}</a></p>
+        </div>
+    </div>
+</section>
+
+<section class="pannel">
+    <h2 style="color: white;">Queue members</h2>
+    <table>
+        <thead>
+            <tr>
+                <th style="color: black;">Token</th>
+                <th style="color: black;">Nickname</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for member in members %}
+            <tr>
+                <td>{{ member.token_number }}</td>
+                <td>{{ member.nickname }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

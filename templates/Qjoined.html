@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Joined Queue - QuickQ{% endblock %}
+
+{% block content %}
+<section class="pannel">
+    <h1>Successfully joined!</h1>
+    <p>Your nickname: <strong>{{ nickname }}</strong></p>
+    <p>Queue: <strong>{{ queue.queue_name }}</strong></p>
+    <p>Your token number: <strong>#{{ token_number }}</strong></p>
+</section>
+
+<section class="pannel">
+    <h2>Current queue status</h2>
+    {% if serving_member %}
+        <p><strong>Serving now:</strong> #{{ serving_member.token_number }}</p>
+    {% else %}
+        <p>No token is currently being served.</p>
+    {% endif %}
+</section>
+{% endblock %}

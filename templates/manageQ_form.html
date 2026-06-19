@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Queue</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            background-image: url('static/images/image3.png');
+            background-repeat: no-repeat; 
+            background-size: cover; 
+            background-position: center;
+            background-attachment: fixed; 
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="{{ url_for('home') }}">QUICKQ</a>
+            <nav class="nav-menu">
+                <a class="nav-link" href="{{ url_for('home') }}">Home</a>
+                <a class="nav-link" href="{{ url_for('createQ') }}">Create Queue</a>
+                <a class="nav-link" href="{{ url_for('join_queue') }}">Join Queue</a>
+                <a class="nav-link" href="{{ url_for('manage_queue_form') }}">Manage Queue</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="pannel">
+        <div class="pannel-grid">
+            <h1>Manage Queue</h1>
+            <form action="/manageQ.html" method="POST">
+                <label for="admin_token">Admin Token</label>
+                <input type="text" id="admin_token" name="admin_token" required>
+                <button type="submit">Open Queue</button>
+            </form>
+            {% if error %}
+                <p class="error">{{ error }}</p>
+            {% endif %}
+        </div>
+    </section>
+    <footer class="site-footer">
+        Built for fast, friendly queue management.
+    </footer>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Queue</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            background-image: url('static/images/image3.png');
+            background-repeat: no-repeat; 
+            background-size: cover; 
+            background-position: center;
+            background-attachment: fixed; 
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="{{ url_for('home') }}">QUICKQ</a>
+            <nav class="nav-menu">
+                <a class="nav-link" href="{{ url_for('home') }}">Home</a>
+                <a class="nav-link" href="{{ url_for('createQ') }}">Create Queue</a>
+                <a class="nav-link" href="{{ url_for('join_queue') }}">Join Queue</a>
+                <a class="nav-link" href="{{ url_for('manage_queue_form') }}">Manage Queue</a>
+            </nav>
+        </div>
+    </header>
+    <section class="pannel">
+    <div class="pannel-grid">
+        <h1>Join Queue</h1>
+        <form action="/joinQ.html" method="POST">
+            <label for="queue_code">Queue Code</label>
+            <input id="queue_code" type="text" name="queue_code" placeholder="Enter Queue Code" value="{{ queue_code|default('') }}" required>
+            <label for="nickname">Nickname</label>
+            <input id="nickname" type="text" name="nickname" placeholder="Enter Nickname" required>
+            <button type="submit" name="action" value="join">Join Queue</button>
+            <button type="submit" name="action" value="status" formnovalidate style="margin-top: 8px; background: rgb(255, 154, 2);">Check Queue Status</button>
+        </form>
+        <button type="button" id="scan-btn">Scan QR Code</button>
+        <div class="scanner" id="scanner">
+            <video id="scanner-video" autoplay playsinline></video>
+            <p id="scanner-status" style="color: rgb(255, 154, 2);">Tap "Scan QR Code" to use your camera.</p>
+        </div>
+        <div class="scanner-fallback">
+            <label for="qr-file">Or upload a QR code image</label>
+            <input id="qr-file" type="file" accept="image/*">
+        </div>
+        <canvas id="qr-canvas" style="display:none"></canvas>
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        {% if queue_status %}
+            <div class="status-box">
+                <h3>Queue Status</h3>
+                <p><strong>Queue:</strong> {{ queue_status.queue_name }} ({{ queue_status.queue_code }})</p>
+                {% if queue_status.current_member %}
+                    <p><strong>Currently Serving:</strong> #{{ queue_status.current_member.token_number }} - {{ queue_status.current_member.nickname }}</p>
+                {% elif queue_status.current_token %}
+                    <p><strong>Currently Serving:</strong> Token {{ queue_status.current_token }}</p>
+                {% else %}
+                    <p><strong>Currently Serving:</strong> No current token</p>
+                {% endif %}
+                <p><strong>Total Members:</strong> {{ queue_status.total_members }}</p>
+                <p><strong>Waiting:</strong> {{ queue_status.waiting_count }}</p>
+            </div>
+        {% endif %}
+    </div>
+    </section>
+    <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
+    <script>
+        const scanBtn = document.getElementById('scan-btn');
+        const scannerDiv = document.getElementById('scanner');
+        const video = document.getElementById('scanner-video');
+        const statusText = document.getElementById('scanner-status');
+        const queueCodeInput = document.getElementById('queue_code');
+        const qrFileInput = document.getElementById('qr-file');
+        const qrCanvas = document.getElementById('qr-canvas');
+        let stream = null;
+        let barcodeDetector = null;
+
+        async function isQrScannerSupported() {
+            if ('BarcodeDetector' in window) {
+                return await BarcodeDetector.getSupportedFormats().then(formats => formats.includes('qr_code')).catch(() => false);
+            }
+            return typeof jsQR !== 'undefined';
+        }
+
+        async function decodeQrFromImageBitmap(imageBitmap) {
+            const ctx = qrCanvas.getContext('2d');
+            qrCanvas.width = imageBitmap.width;
+            qrCanvas.height = imageBitmap.height;
+            ctx.drawImage(imageBitmap, 0, 0);
+            const imageData = ctx.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
+
+            if ('BarcodeDetector' in window) {
+                try {
+                    barcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
+                    const detections = await barcodeDetector.detect(imageBitmap);
+                    if (detections.length > 0) {
+                        return detections[0].rawValue;
+                    }
+                } catch (error) {
+                    console.warn('BarcodeDetector failed, falling back to jsQR.', error);
+                }
+            }
+
+            if (typeof jsQR !== 'undefined') {
+                const result = jsQR(imageData.data, imageData.width, imageData.height);
+                return result ? result.data : null;
+            }
+
+            return null;
+        }
+
+        async function startScanner() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                statusText.textContent = 'Camera access is not supported by your browser.';
+                return;
+            }
+
+            if (!await isQrScannerSupported()) {
+                statusText.textContent = 'QR scanning is not available in this browser. Use a modern browser or upload a QR image.';
+                return;
+            }
+
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                video.srcObject = stream;
+                scannerDiv.classList.add('active');
+                scanBtn.textContent = 'Stop scanner';
+                statusText.textContent = 'Point your camera at the QR code.';
+                requestAnimationFrame(scanFrame);
+            } catch (error) {
+                statusText.textContent = 'Unable to access camera: ' + error.message;
+            }
+        }
+
+        function stopScanner() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+                video.srcObject = null;
+            }
+            scannerDiv.classList.remove('active');
+            scanBtn.textContent = 'Scan QR Code';
+        }
+
+        async function scanFrame() {
+            if (!stream || !barcodeDetector) {
+                return;
+            }
+
+            try {
+                const detections = await barcodeDetector.detect(video);
+                if (detections.length > 0) {
+                    const rawValue = detections[0].rawValue;
+                    fillCode(rawValue);
+                    stopScanner();
+                    return;
+                }
+            } catch (error) {
+                console.error(error);
+            }
+            requestAnimationFrame(scanFrame);
+        }
+
+        function fillCode(rawValue) {
+            try {
+                const url = new URL(rawValue);
+                const params = new URLSearchParams(url.search);
+                const code = params.get('queue_code') || rawValue;
+                queueCodeInput.value = code;
+                statusText.textContent = 'Queue code detected: ' + code;
+            } catch {
+                queueCodeInput.value = rawValue;
+                statusText.textContent = 'Queue code detected.';
+            }
+        }
+
+        scanBtn.addEventListener('click', () => {
+            if (stream) {
+                stopScanner();
+                statusText.textContent = 'Scanner stopped.';
+            } else {
+                startScanner();
+            }
+        });
+
+        qrFileInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            if (!await isQrScannerSupported()) {
+                statusText.textContent = 'QR scanning is not available in this browser. Please use a supported browser.';
+                return;
+            }
+
+            try {
+                const imageBitmap = await createImageBitmap(file);
+                const rawValue = await decodeQrFromImageBitmap(imageBitmap);
+                if (rawValue) {
+                    fillCode(rawValue);
+                } else {
+                    statusText.textContent = 'No QR code detected in that image. Try another image or use the camera scanner.';
+                }
+            } catch (error) {
+                statusText.textContent = 'Unable to read QR image: ' + error.message;
+            }
+        });
+    </script>
+    <footer class="site-footer">
+        Built for fast, friendly queue management.
+    </footer>
+</body>
+</html>
