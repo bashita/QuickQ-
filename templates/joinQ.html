@@ -38,8 +38,7 @@
             <button type="submit" name="action" value="join">Join Queue</button>
             <button type="submit" name="action" value="status" formnovalidate style="margin-top: 8px; background: rgb(255, 154, 2);">Check Queue Status</button>
         </form>
-        <button type="button" id="scan-btn">Scan QR Code</button>
-        <div class="scanner" id="scanner">
+        <div class="scanner active" id="scanner">
             <video id="scanner-video" autoplay playsinline></video>
             <p id="scanner-status" style="color: rgb(255, 154, 2);">Tap "Scan QR Code" to use your camera.</p>
         </div>
@@ -53,24 +52,23 @@
         {% endif %}
         {% if queue_status %}
             <div class="status-box">
-                <h3>Queue Status</h3>
-                <p><strong>Queue:</strong> {{ queue_status.queue_name }} ({{ queue_status.queue_code }})</p>
+                <h3 style="color:black">Queue Status</h3>
+                <p style="color:black"><strong>Queue:</strong> {{ queue_status.queue_name }} ({{ queue_status.queue_code }})</p>
                 {% if queue_status.current_member %}
-                    <p><strong>Currently Serving:</strong> #{{ queue_status.current_member.token_number }} - {{ queue_status.current_member.nickname }}</p>
+                    <p style="color:black"><strong>Currently Serving:</strong> #{{ queue_status.current_member.token_number }} - {{ queue_status.current_member.nickname }}</p>
                 {% elif queue_status.current_token %}
-                    <p><strong>Currently Serving:</strong> Token {{ queue_status.current_token }}</p>
+                    <p style="color:black"  ><strong>Currently Serving:</strong> Token {{ queue_status.current_token }}</p>
                 {% else %}
-                    <p><strong>Currently Serving:</strong> No current token</p>
+                    <p style="color:black"><strong>Currently Serving:</strong> No current token</p>
                 {% endif %}
-                <p><strong>Total Members:</strong> {{ queue_status.total_members }}</p>
-                <p><strong>Waiting:</strong> {{ queue_status.waiting_count }}</p>
+                <p style="color:black"><strong>Total Members:</strong> {{ queue_status.total_members }}</p>
+                <p style="color:black"><strong>Waiting:</strong> {{ queue_status.waiting_count }}</p>
             </div>
         {% endif %}
     </div>
     </section>
     <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
     <script>
-        const scanBtn = document.getElementById('scan-btn');
         const scannerDiv = document.getElementById('scanner');
         const video = document.getElementById('scanner-video');
         const statusText = document.getElementById('scanner-status');
@@ -129,7 +127,6 @@
                 stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                 video.srcObject = stream;
                 scannerDiv.classList.add('active');
-                scanBtn.textContent = 'Stop scanner';
                 statusText.textContent = 'Point your camera at the QR code.';
                 requestAnimationFrame(scanFrame);
             } catch (error) {
@@ -144,7 +141,6 @@
                 video.srcObject = null;
             }
             scannerDiv.classList.remove('active');
-            scanBtn.textContent = 'Scan QR Code';
         }
 
         async function scanFrame() {
@@ -179,13 +175,8 @@
             }
         }
 
-        scanBtn.addEventListener('click', () => {
-            if (stream) {
-                stopScanner();
-                statusText.textContent = 'Scanner stopped.';
-            } else {
-                startScanner();
-            }
+        window.addEventListener('load', () => {
+            startScanner();
         });
 
         qrFileInput.addEventListener('change', async (event) => {
