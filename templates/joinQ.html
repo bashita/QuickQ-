@@ -38,10 +38,6 @@
             <button type="submit" name="action" value="join">Join Queue</button>
             <button type="submit" name="action" value="status" formnovalidate style="margin-top: 8px; background: rgb(255, 154, 2);">Check Queue Status</button>
         </form>
-        <div class="scanner active" id="scanner">
-            <video id="scanner-video" autoplay playsinline></video>
-            <p id="scanner-status" style="color: rgb(255, 154, 2);">Tap "Scan QR Code" to use your camera.</p>
-        </div>
         <div class="scanner-fallback">
             <label for="qr-file">Or upload a QR code image</label>
             <input id="qr-file" type="file" accept="image/*">
@@ -69,14 +65,11 @@
     </section>
     <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
     <script>
-        const scannerDiv = document.getElementById('scanner');
-        const video = document.getElementById('scanner-video');
         const statusText = document.getElementById('scanner-status');
         const queueCodeInput = document.getElementById('queue_code');
         const qrFileInput = document.getElementById('qr-file');
         const qrCanvas = document.getElementById('qr-canvas');
-        let stream = null;
-        let barcodeDetector = null;
+        
 
         async function isQrScannerSupported() {
             if ('BarcodeDetector' in window) {
@@ -112,56 +105,6 @@
             return null;
         }
 
-        async function startScanner() {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                statusText.textContent = 'Camera access is not supported by your browser.';
-                return;
-            }
-
-            if (!await isQrScannerSupported()) {
-                statusText.textContent = 'QR scanning is not available in this browser. Use a modern browser or upload a QR image.';
-                return;
-            }
-
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                video.srcObject = stream;
-                scannerDiv.classList.add('active');
-                statusText.textContent = 'Point your camera at the QR code.';
-                requestAnimationFrame(scanFrame);
-            } catch (error) {
-                statusText.textContent = 'Unable to access camera: ' + error.message;
-            }
-        }
-
-        function stopScanner() {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-                stream = null;
-                video.srcObject = null;
-            }
-            scannerDiv.classList.remove('active');
-        }
-
-        async function scanFrame() {
-            if (!stream || !barcodeDetector) {
-                return;
-            }
-
-            try {
-                const detections = await barcodeDetector.detect(video);
-                if (detections.length > 0) {
-                    const rawValue = detections[0].rawValue;
-                    fillCode(rawValue);
-                    stopScanner();
-                    return;
-                }
-            } catch (error) {
-                console.error(error);
-            }
-            requestAnimationFrame(scanFrame);
-        }
-
         function fillCode(rawValue) {
             try {
                 const url = new URL(rawValue);
@@ -175,9 +118,6 @@
             }
         }
 
-        window.addEventListener('load', () => {
-            startScanner();
-        });
 
         qrFileInput.addEventListener('change', async (event) => {
             const file = event.target.files[0];
