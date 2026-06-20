@@ -17,8 +17,23 @@ db= pymysql.connect(
        database="defaultdb",
        port=27410,
        ssl={"ca": "ca.pem"})
+db.ping(reconnect=True)  # Ensure the connection is alive
 
 cursor = db.cursor(pymysql.cursors.DictCursor)
+def reconnect_db():
+    """Reconnect to the database if the connection is lost."""
+    global db, cursor
+    try:
+        db.ping(reconnect=True)
+    except:
+        db = pymysql.connect(
+            host="quickq-mysql-bashita2503-e67d.i.aivencloud.com",
+            user="avnadmin",
+            password="AVNS_GIeVVgsoQlwtKpWU8YN",
+            database="defaultdb",
+            port=27410,
+            ssl={"ca": "ca.pem"})
+        cursor = db.cursor(pymysql.cursors.DictCursor)
 
 @app.route('/init-db')
 def create_tables():
@@ -68,7 +83,8 @@ def createQ():
               queue_name = request.form['queue_name']
               queue_code = generate_queue_code()
               admin_token = generate_admin_token()
-       
+
+              reconnect_db()       
               # Insert into database
               sql = "INSERT INTO Queues (queue_name, queue_code, admin_token) VALUES (%s, %s, %s)"
               cursor.execute(sql, (queue_name, queue_code, admin_token))
@@ -89,6 +105,7 @@ def manage_queue_form():
 @app.route('/manage/<admin_token>')
 def manage_queue(admin_token):
 
+    reconnect_db()
     cursor = db.cursor(pymysql.cursors.DictCursor)
 
     # Find queue
@@ -136,7 +153,7 @@ def manage_queue(admin_token):
 
 @app.route('/next/<admin_token>')
 def next_token(admin_token):
-
+    reconnect_db()
     cursor = db.cursor(pymysql.cursors.DictCursor)
 
     # Find queue
@@ -194,7 +211,7 @@ def next_token(admin_token):
 
 @app.route('/joinQ.html', methods=['GET', 'POST'])
 def join_queue():
-
+    reconnect_db()
     queue_code = request.args.get('queue_code', '')
 
     if request.method == 'POST':
@@ -203,6 +220,7 @@ def join_queue():
         action = request.form.get('action', 'join')
         nickname = request.form.get('nickname', '').strip()
 
+        reconnect_db()
         cursor = db.cursor(pymysql.cursors.DictCursor)
 
         # Find queue using queue code
