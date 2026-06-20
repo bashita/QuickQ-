@@ -19,6 +19,11 @@
             background: #f5f7fb;
             color: #000000;
             min-height: 100vh;
+            background-image: url('static/images/image3.png');
+            background-repeat: no-repeat; 
+            background-size: cover; 
+            background-position: center;
+            background-attachment: fixed;
         }
         /* NAVBAR */
         .site-header {
@@ -147,6 +152,18 @@
         .feature-card:hover {
             transform: translateY(-5px);
         }
+        .section-title {
+            font-size: 46px;
+            margin-bottom: 18px;
+            color: #ffffff;
+        }
+        .section-subtitle {
+            color: #ffffff;
+            line-height: 1.8;
+            margin-bottom: 18px;
+            width:100%;
+            font-size: 15px;
+        }
         .feature-content {
             padding: 22px;
         }
@@ -163,9 +180,7 @@
         .how-section {
             margin-top: 90px;
             align-items: center;
-        }
-        .how-content{
-            width: 100%;
+            color:#ffffff
         }
         .how-content h2 {
             font-size: 46px;
@@ -185,6 +200,7 @@
             border-radius: 12px;
             margin-bottom: 16px;
             box-shadow: 0 5px 14px rgba(0,0,0,0.05);
+            color:#000000;
         }
         .step strong {
             color: #0d0d0e;
@@ -282,6 +298,7 @@
             font-size:16px;
         }
     }
+
     </style>
     </head>
     <body>
@@ -373,8 +390,10 @@
         <div class="how-section">
             <div class="how-content">
                 <h2>How To Use</h2>
-                <p>QuickQ is designed to be fast, simple, and accessible
-                    for everyone without requiring accounts or downloads.</p>
+                <p style="color: #ffffff;">
+                    QuickQ is designed to be fast, simple, and accessible
+                    for everyone without requiring accounts or downloads.
+                </p>
                 <div class="step">
                     <strong>To Create a Queue:</strong>
                     Go to "Create Queue" tab, enter a name for your queue, and submit. You'll receive a unique queue code, admin token and a link to manage your queue.
