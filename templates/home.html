@@ -198,51 +198,90 @@
             margin-top: 50px;
         }
         /* RESPONSIVE DESIGN */
-        @media (max-width: 950px) {
-            .hero {
-                grid-template-columns: 1fr;
-                text-align: center;
-                padding-top: 40px;
-            }
-            .hero-left {
-                justify-content: center;
-            }
-            .hero-content p {
-                margin-left: auto;
-                margin-right: auto;
-            }
-            .hero-buttons {
-                justify-content: center;
-            }
-            .hero-content h1 {
-                font-size: 46px;
-            }
-            .info-strip {
-                grid-template-columns: 1fr 1fr;
-            }
-            .how-section {
+        /* Desktop */
+        @media (min-width:900px){
 
-                grid-template-columns: 1fr;
+            .hero{
+                grid-template-columns:1fr 1fr;
+                align-items:center;
             }
-        }
-        @media (max-width: 600px) {
-            .hero-content h1 {
-                font-size: 38px;
+
+            .info-strip{
+                grid-template-columns:repeat(4,1fr);
             }
-            .section-title {
-                font-size: 36px;
+
+            .how-section{
+                grid-template-columns:repeat(3,1fr);
             }
-            .info-strip {
-                grid-template-columns: 1fr;
-            }
-            .hero-buttons {
-                flex-direction: column;
-            }
-            .hero-btn {
-                text-align: center;
-            }
+    }
+
+    /* Tablet & Mobile */
+    @media (max-width:768px){
+
+        .hero{
+            grid-template-columns:1fr;
+            text-align:center;
+            padding-top:40px;
+            gap:30px;
         }
 
+        .hero-left{
+            justify-content:center;
+        }
+
+        .hero-content p{
+            margin-left:auto;
+            margin-right:auto;
+        } 
+
+        .hero-buttons{
+            justify-content:center;
+            flex-wrap:wrap;
+        }
+
+        .hero-content h1{
+            font-size:42px;
+        }
+
+        .section-title{
+            font-size:34px;
+        }
+
+        .info-strip{
+            grid-template-columns:1fr;
+        }
+
+        .how-section{
+            grid-template-columns:1fr;
+        }
+    }
+ 
+    /* Small Phones */
+    @media (max-width:480px){
+
+        .hero-content h1{
+            font-size:34px;
+            line-height:1.2;
+        }
+
+        .section-title{
+            font-size:28px;
+        }
+
+        .hero-buttons{
+            flex-direction:column;
+            gap:12px;
+        }
+
+        .hero-btn{
+            width:100%;
+            text-align:center;
+        }
+
+        .hero-content p{
+            font-size:16px;
+        }
+    }
     </style>
     </head>
     <body>
