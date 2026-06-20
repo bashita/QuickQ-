@@ -6,16 +6,17 @@ import string
 import io
 import base64
 import qrcode
+import os
 app = Flask(__name__)
 app.secret_key = 'quickq'
 
 # --- MySQL connection ---
 db= pymysql.connect(
-       host="quickq-mysql-bashita2503-e67d.i.aivencloud.com",
-       user="avnadmin",
-       password="AVNS_GIeVVgsoQlwtKpWU8YN",
-       database="defaultdb",
-       port=27410,
+       host=os.getenv("DB_HOST"),
+       user=os.getenv("DB_USER"),
+       password=os.getenv("DB_PASSWORD"),
+       database=os.getenv("DB_NAME"),
+       port=int(os.getenv("DB_PORT")),
        ssl={"ca": "ca.pem"})
 db.ping(reconnect=True)  # Ensure the connection is alive
 
@@ -27,11 +28,11 @@ def reconnect_db():
         db.ping(reconnect=True)
     except:
         db = pymysql.connect(
-            host="quickq-mysql-bashita2503-e67d.i.aivencloud.com",
-            user="avnadmin",
-            password="AVNS_GIeVVgsoQlwtKpWU8YN",
-            database="defaultdb",
-            port=27410,
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME"),
+            port=int(os.getenv("DB_PORT")),
             ssl={"ca": "ca.pem"})
         cursor = db.cursor(pymysql.cursors.DictCursor)
 
